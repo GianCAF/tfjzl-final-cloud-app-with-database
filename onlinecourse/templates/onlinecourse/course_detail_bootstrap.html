@@ -41,16 +41,55 @@
 
     <!-- Page content -->
     <div class="container-fluid">
-            <h2>{{ course.name }}</h2>
-            <div class="card-columns-vertical">
-                {% for lesson in course.lesson_set.all %}
-                    <div class="card mt-1">
-                        <div class="card-header"><h5>Lesson {{lesson.order|add:1}}: {{lesson.title}}</h5></div>
-                        <div class="card-body">{{lesson.content}}</div>
-                    </div>
-                {% endfor %}
+        <h2>{{ course.name }}</h2>
+        <div class="card-columns-vertical">
+            {% for lesson in course.lesson_set.all %}
+            <div class="card mt-1">
+                <div class="card-header">
+                    <h5>Lesson {{ lesson.order }}: {{ lesson.title }}</h5>
+                </div>
+                <div class="card-body">{{ lesson.content }}</div>
             </div>
-            <!-- Course detail template changes go here -->
+            {% endfor %}
+        </div>
+    
+        <!-- Exam Section (solo visible para usuarios autenticados) -->
+        {% if user.is_authenticated %}
+        <br>
+        <button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#exam">
+            Start Exam
+        </button>
+    
+        <div id="exam" class="collapse">
+            <form id="questionForm" action="{% url 'onlinecourse:submit' course.id %}" method="post">
+                {% csrf_token %}
+                {% for question in course.question_set.all %}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>{{ question.content }}</h5>
+                        <p class="text-muted">({{ question.grade }} points)</p>
+                    </div>
+                    <div class="card-body">
+                        {% for choice in question.choice_set.all %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="choice_{{ choice.id }}"
+                                id="choice_{{ choice.id }}" value="{{ choice.id }}">
+                            <label class="form-check-label" for="choice_{{ choice.id }}">
+                                {{ choice.content }}
+                                {% if choice.is_correct %}
+                                <span class="badge badge-success">Correct</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+                <br>
+                <input class="btn btn-success btn-block" type="submit" value="Submit Exam">
+            </form>
+        </div>
+        {% endif %}
     </div>
 </body>
 </html>
